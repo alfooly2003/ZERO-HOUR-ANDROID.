@@ -1,0 +1,24 @@
+بناء APK من الموبايل فقط عبر GitHub Actions
+
+1) افتح github.com من Chrome وسجل الدخول.
+2) أنشئ Repository جديدًا باسم ZERO-HOUR-ANDROID.
+3) اختر Public أو Private ثم Create repository.
+4) من صفحة المستودع اضغط Add file ثم Upload files.
+5) فك ضغط ZERO_HOUR_ANDROID_PHONE_BUILD.zip على الهاتف أولًا، ثم ارفع كل محتويات المجلد إلى المستودع مع الحفاظ على المجلدات، خصوصًا:
+   - app/
+   - .github/workflows/build-apk.yml
+   - build.gradle
+   - settings.gradle
+   - gradle.properties
+6) اضغط Commit changes.
+7) افتح تبويب Actions في المستودع.
+8) اختر Build ZERO HOUR APK ثم Run workflow.
+9) انتظر حتى تصبح العملية خضراء (نجاح).
+10) افتح العملية الناجحة، انزل إلى Artifacts، واضغط ZERO-HOUR-debug-APK لتنزيل ZIP الذي بداخله app-debug.apk.
+11) فك ضغطه وثبّت APK على هاتفك. قد تحتاج السماح لمتصفحك بتثبيت تطبيقات غير معروفة.
+
+ملاحظات:
+- GitHub يبني التطبيق على خوادمه؛ لا تحتاج Android Studio أو كمبيوتر.
+- هذا Debug APK للتجربة وليس إصدار متجر Google Play.
+- لا ترفع أي كلمات مرور أو مفاتيح توقيع خاصة إلى المستودع.
+- إذا فشل البناء، افتح العملية الحمراء وانسخ آخر 20-30 سطرًا من سجل الخطأ وأرسلها لي.
