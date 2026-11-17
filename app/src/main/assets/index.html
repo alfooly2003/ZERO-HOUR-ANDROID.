@@ -1,1 +1,142 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#101914"><title>ZERO HOUR | ساعة الصفر</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#111a15;color:#f4f0df;font-family:system-ui,Tahoma,Arial;touch-action:none}canvas{display:block;width:100vw;height:100dvh}
+#ui{position:fixed;inset:0;pointer-events:none}.box{position:absolute;background:#101713df;border:1px solid #9ba98a66;border-radius:12px;padding:8px 11px;box-shadow:0 4px 18px #0007}
+#logo{top:8px;right:8px;font-weight:1000;font-size:17px;color:#f2e6c8}#logo b{color:#e35442}
+#stats{top:49px;right:8px;font-size:12px;min-width:145px;line-height:1.65}
+#mission{top:8px;left:8px;max-width:48%;font-size:11px;line-height:1.55}
+#topBtns{position:absolute;top:110px;right:8px;display:flex;gap:5px;pointer-events:auto;flex-direction:column}
+button{font:inherit;cursor:pointer}#topBtns button,.menuBtn{background:#26372b;color:#f5efd9;border:1px solid #a5b39488;border-radius:9px;padding:7px 10px;font-size:12px}
+.bar{height:7px;background:#493d36;border-radius:8px;overflow:hidden}.fill{height:100%;width:100%;background:#c44439}
+#controls{position:absolute;bottom:12px;left:12px;right:12px;display:flex;justify-content:space-between;align-items:end;direction:ltr}
+#stick{width:116px;height:116px;border:2px solid #d8dfc477;border-radius:50%;background:#15231c99;position:relative;pointer-events:auto;touch-action:none}
+#nub{width:42px;height:42px;border-radius:50%;background:#d5ddc9bb;border:2px solid #fff9;position:absolute;left:35px;top:35px}
+#actions{display:flex;gap:8px;align-items:end;pointer-events:auto}
+.act{border:1px solid #fff8;background:#9d3329;color:white;border-radius:50%;width:64px;height:64px;font-weight:800;font-size:11px;touch-action:none}
+#fire{background:#a76a25;width:72px;height:72px}
+#hint{position:absolute;bottom:135px;left:50%;transform:translateX(-50%);font-size:11px;color:#e9e4ce;background:#101713bb;padding:5px 9px;border-radius:8px;white-space:nowrap}
+#overlay{position:fixed;inset:0;background:#07100df2;display:flex;align-items:center;justify-content:center;padding:16px;overflow:auto}
+#card{width:min(520px,100%);max-height:95dvh;overflow:auto;background:#17231d;border:1px solid #8da18b66;border-radius:18px;padding:21px;box-shadow:0 15px 50px #0009;text-align:center}
+h1{margin:0;font-size:34px;line-height:1;color:#f2e8ce}h1 b{color:#df493b}#subtitle{color:#d9cba9;font-weight:700;margin:7px 0 14px}
+#story{line-height:1.8;color:#d5d8c9;font-size:13px}.menuGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:14px 0}
+.menuBtn{padding:12px 8px;font-weight:700}.menuBtn:disabled{opacity:.4}
+.primary{border:0;background:#bd4034;color:white;border-radius:11px;padding:12px 25px;font-weight:900;width:100%;margin-top:8px}
+.small{font-size:10px;color:#aeb8a8;line-height:1.7}.hidden{display:none!important}
+#networkSetup input{font-family:inherit}#toast{position:absolute;top:23%;left:50%;transform:translateX(-50%);background:#101713ed;border:1px solid #c7b77b;border-radius:10px;padding:9px 14px;font-size:13px;opacity:0;transition:opacity .2s;white-space:nowrap}
+@media(min-width:700px){#stick{width:130px;height:130px}#nub{left:43px;top:43px}.act{width:72px;height:72px}}
+</style></head>
+<body>
+<canvas id="game"></canvas>
+<div id="ui">
+ <div id="logo" class="box">ZERO <b>HOUR</b> <small>ساعة الصفر</small></div>
+ <div id="stats" class="box">علوي · <span id="worldName">المدينة المنسية</span><br>الصحة: <b id="hp">100</b>%<div class="bar"><div id="health" class="fill"></div></div>الذخيرة: <b id="ammo">24</b> · المؤن: <b id="supplies">0</b>/3<br>المستوى: <b id="levelNo">1</b>/5</div>
+ <div id="mission" class="box">المهمة: اجمع المؤن ثم وصل لنقطة الإخلاء.</div>
+ <div id="topBtns"><button id="pause">Ⅱ إيقاف</button><button id="inventory">🎒 الحقيبة</button></div>
+ <div id="toast"></div><div id="hint">العصا للحركة · أطلق النار على الأعداء · اجمع المؤن</div>
+ <div id="controls"><div id="stick"><div id="nub"></div></div><div id="actions"><button class="act" id="interact">تفاعل</button><button class="act" id="fire">إطلاق</button></div></div>
+</div>
+<div id="overlay"><div id="card">
+ <h1>ZERO <b>HOUR</b></h1><div id="subtitle">ساعة الصفر · بطولة علوي</div>
+ <div id="story">بعد كارثة غامضة، استيقظ علوي في مدينة مهجورة. اجمع الموارد، واجه الأخطار، واكتشف ما حدث قبل فوات الأوان.</div>
+ <div class="menuGrid" id="menu">
+ <button class="menuBtn" id="city">🌆 المدينة المنسية</button><button class="menuBtn" id="island">🏝️ الجزيرة المجهولة</button>
+ <button class="menuBtn" id="continue">▶ متابعة التقدم</button><button class="menuBtn" id="bagMenu">🎒 الحقيبة</button><button class="menuBtn" id="multiplayer">👥 لعب جماعي</button>
+ </div>
+ <div id="levelSelect" class="hidden"><div class="small">اختر مرحلة مفتوحة</div><div class="menuGrid" id="levels"></div><button class="menuBtn" id="back">رجوع</button></div>
+ <div id="networkSetup" class="hidden" style="text-align:right">
+   <div class="small">اللعب الجماعي عبر نفس شبكة Wi‑Fi أو Hotspot</div>
+   <label class="small">اسمك داخل اللعبة</label>
+   <input id="nickname" maxlength="16" value="علوي" style="width:100%;padding:11px;border-radius:9px;border:1px solid #8da18b;background:#0d1711;color:#fff;margin:5px 0 9px;font-size:16px">
+   <label class="small">طريقة اللعب</label>
+   <div class="menuGrid"><button class="menuBtn" id="coop">🤝 مع بعض</button><button class="menuBtn" id="versus">⚔️ ضد بعض</button></div>
+   <label class="small">عنوان المضيف (يكتبه اللاعب الذي ينضم)</label>
+   <input id="serverAddress" value="ws://192.168.1.2:8080" style="width:100%;padding:11px;border-radius:9px;border:1px solid #8da18b;background:#0d1711;color:#fff;margin:5px 0 9px;direction:ltr;font-size:14px">
+   <div class="small" id="netStatus">اختر استضافة الغرفة أو الانضمام إلى غرفة صديق.</div>
+   <div class="menuGrid"><button class="menuBtn" id="hostInfo">📡 أنا المضيف</button><button class="menuBtn" id="joinRoom">🔗 انضمام</button></div>
+   <button class="menuBtn" id="offlineStart" style="width:100%">العب فرديًا دون اتصال</button>
+ </div>
+ <button class="primary" id="start">ابدأ / تابع</button>
+ <div class="small" style="margin-top:10px">نسخة تجريبية مطورة تعمل محلياً دون إنترنت. التقدم يُحفظ على نفس المتصفح والجهاز.</div>
+ </div></div>
+<script>
+(()=>{
+const $=id=>document.getElementById(id),canvas=$('game'),ctx=canvas.getContext('2d');
+let W,H,dpr=1,started=false,paused=false,won=false,last=0,toastTimer;
+function resize(){dpr=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight;canvas.width=W*dpr;canvas.height=H*dpr;ctx.setTransform(dpr,0,0,dpr,0,0)}addEventListener('resize',resize);resize();
+const worlds=[
+{name:'المدينة المنسية',levels:['بوابة الخراب','شارع الصمت','المستشفى القديم','محطة المترو','برج الإخلاء'],theme:'city'},
+{name:'الجزيرة المجهولة',levels:['شاطئ الحطام','الغابة الكثيفة','الكهف القديم','المختبر السري','قلب الجزيرة'],theme:'island'}];
+let progress=JSON.parse(localStorage.getItem('zh_save')||'{"unlocked":[1,0],"completed":[[],[]],"bestAmmo":24}');
+let worldIndex=0,levelIndex=0,world={w:1500,h:1100},player={x:150,y:150,hp:100,ammo:24,speed:190},camera={x:0,y:0};
+let supplies=[],walls=[],crates=[],enemies=[],bullets=[],medkits=0,joy={x:0,y:0},keys={},lastShot=0;
+let net=null,netMode='coop',netPlayers={},netId=null,nick='علوي',netSendAt=0;
+function save(){localStorage.setItem('zh_save',JSON.stringify(progress))}
+function showToast(t){$('toast').textContent=t;$('toast').style.opacity=1;clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').style.opacity=0,1700)}
+function iso(x,y){return{x:(x-y)*.72,y:(x+y)*.38}}
+function resetLevel(){player={x:140,y:140,hp:100,ammo:24+levelIndex*3,speed:190};medkits=0;bullets=[];supplies=Array.from({length:3},(_,i)=>({x:[480,980,420][i]+levelIndex*13,y:[240,510,850][i],got:false}));walls=[{x:320,y:100,w:230,h:115},{x:730,y:120,w:220,h:140},{x:1160,y:190,w:230,h:130},{x:100,y:450,w:190,h:160},{x:600,y:430,w:250,h:130},{x:1000,y:740,w:210,h:150},{x:180,y:940,w:250,h:100},{x:720,y:920,w:180,h:100}];crates=[{x:620,y:300},{x:900,y:320},{x:300,y:700},{x:1180,y:600},{x:760,y:720}];enemies=Array.from({length:3+levelIndex},(_,i)=>({x:650+(i%3)*230,y:560+Math.floor(i/3)*190,hp:2,hit:0}));}
+function selectWorld(i){worldIndex=i;$('worldName').textContent=worlds[i].name;$('menu').classList.add('hidden');$('levelSelect').classList.remove('hidden');$('start').classList.add('hidden');$('levels').innerHTML='';for(let n=0;n<5;n++){let b=document.createElement('button');b.className='menuBtn';b.textContent='المستوى '+(n+1)+' · '+worlds[i].levels[n];b.disabled=n>=progress.unlocked[i];b.onclick=()=>{levelIndex=n;begin()};$('levels').appendChild(b)}}
+function begin(){$('networkSetup').classList.add('hidden');resetLevel();$('overlay').style.display='none';$('levelSelect').classList.add('hidden');$('menu').classList.remove('hidden');$('start').classList.remove('hidden');started=true;paused=false;won=false;updateHud();showToast(worlds[worldIndex].levels[levelIndex]);}
+function updateHud(){$('worldName').textContent=worlds[worldIndex].name;$('hp').textContent=Math.ceil(player.hp);$('health').style.width=player.hp+'%';$('ammo').textContent=player.ammo;$('supplies').textContent=medkits;$('levelNo').textContent=levelIndex+1;$('mission').innerHTML='المهمة: '+worlds[worldIndex].levels[levelIndex]+'<br>اجمع 3 حقائب مؤن ثم اذهب للإخلاء.'}
+function rect(x,y,w,h,fill){ctx.fillStyle=fill;ctx.fillRect(x,y,w,h)}
+function drawGround(){rect(0,0,world.w,world.h,worldIndex?'#344234':'#303b30');for(let y=0;y<world.h;y+=72)for(let x=0;x<world.w;x+=72){let p=iso(x,y);ctx.fillStyle=((x+y)/72)%2?'#3b4937':'#354333';ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(p.x+52,p.y+28);ctx.lineTo(p.x,p.y+56);ctx.lineTo(p.x-52,p.y+28);ctx.closePath();ctx.fill()}ctx.save();ctx.translate(560,530);ctx.rotate(-.32);rect(-110,-650,220,1320,worldIndex?'#665c45':'#55564b');ctx.restore();
+if(worldIndex){for(let i=0;i<16;i++){let x=(i*173)%world.w,y=(i*251)%world.h,p=iso(x,y);ctx.fillStyle='#203b29';ctx.beginPath();ctx.arc(p.x,p.y-12,17,0,Math.PI*2);ctx.fill();ctx.fillStyle='#5d5035';ctx.fillRect(p.x-4,p.y-10,8,24)}}}
+function building(b){let p=iso(b.x,b.y),w=b.w*.72,d=b.h*.38;ctx.fillStyle='#161e19';ctx.beginPath();ctx.moveTo(p.x-w/2,p.y);ctx.lineTo(p.x,p.y+d);ctx.lineTo(p.x+w/2,p.y);ctx.lineTo(p.x,p.y-d);ctx.closePath();ctx.fill();ctx.fillStyle=worldIndex?'#70634a':'#766b56';ctx.beginPath();ctx.moveTo(p.x-w/2,p.y);ctx.lineTo(p.x,p.y+d);ctx.lineTo(p.x,p.y+d-75);ctx.lineTo(p.x-w/2,p.y-75);ctx.closePath();ctx.fill();ctx.fillStyle='#49483b';ctx.beginPath();ctx.moveTo(p.x,p.y+d);ctx.lineTo(p.x+w/2,p.y);ctx.lineTo(p.x+w/2,p.y-75);ctx.lineTo(p.x,p.y+d-75);ctx.closePath();ctx.fill();ctx.fillStyle='#252c26';ctx.fillRect(p.x-14,p.y-32,20,30)}
+function actor(a,hero=false){let p=iso(a.x,a.y);ctx.fillStyle='#0008';ctx.beginPath();ctx.ellipse(p.x,p.y+5,18,8,0,0,7);ctx.fill();if(hero){ctx.strokeStyle='#7ce875';ctx.lineWidth=3;ctx.beginPath();ctx.ellipse(p.x,p.y+3,23,10,0,0,7);ctx.stroke()}ctx.fillStyle=hero?'#314b3b':'#77796d';ctx.fillRect(p.x-10,p.y-34,20,25);ctx.fillStyle=hero?'#b98762':'#a88a72';ctx.beginPath();ctx.arc(p.x,p.y-42,9,0,7);ctx.fill();ctx.fillStyle='#252923';ctx.fillRect(p.x-11,p.y-50,22,7);if(hero){ctx.fillStyle='#fff';ctx.font='bold 11px sans-serif';ctx.textAlign='center';ctx.fillText(a.name||nick||'لاعب',p.x,p.y-59)}}
+function draw(){ctx.clearRect(0,0,W,H);ctx.save();ctx.translate(W/2-camera.x*.72+camera.y*.72,H/2-camera.y*.38-camera.x*.38);ctx.scale(1.04,1.04);drawGround();let list=[];walls.forEach(b=>list.push({y:b.y,fn:()=>building(b)}));crates.forEach(c=>list.push({y:c.y,fn:()=>{let p=iso(c.x,c.y);rect(p.x-16,p.y-15,32,25,'#805a32');ctx.strokeStyle='#d2a56a';ctx.strokeRect(p.x-16,p.y-15,32,25)}}));supplies.forEach(s=>list.push({y:s.y,fn:()=>{if(!s.got){let p=iso(s.x,s.y);ctx.fillStyle='#e4c64b';ctx.beginPath();ctx.arc(p.x,p.y-8,16,0,7);ctx.fill();ctx.fillStyle='#253329';ctx.fillRect(p.x-7,p.y-15,14,14)}}}));list.push({y:1000,fn:()=>{let p=iso(1300,990);ctx.strokeStyle='#7cf078';ctx.lineWidth=4;ctx.beginPath();ctx.ellipse(p.x,p.y,32,13,0,0,7);ctx.stroke();ctx.fillStyle='#fff';ctx.font='12px sans-serif';ctx.textAlign='center';ctx.fillText('إخلاء',p.x,p.y-20)}});enemies.forEach(e=>list.push({y:e.y,fn:()=>actor(e)}));list.push({y:player.y,fn:()=>actor(player,true)});Object.values(netPlayers).forEach(r=>{if(r.id!==netId){list.push({y:r.y,fn:()=>actor({x:r.x,y:r.y,name:r.name},true)});}});bullets.forEach(b=>list.push({y:b.y,fn:()=>{let p=iso(b.x,b.y);ctx.fillStyle='#ffd46b';ctx.beginPath();ctx.arc(p.x,p.y-20,4,0,7);ctx.fill()}}));list.sort((a,b)=>a.y-b.y);list.forEach(o=>o.fn());ctx.restore()}
+function blocked(x,y){return walls.some(b=>x>b.x-b.w/2-18&&x<b.x+b.w/2+18&&y>b.y-b.h/2-18&&y<b.y+b.h/2+18)||crates.some(c=>Math.hypot(x-c.x,y-c.y)<30)}
+function fire(){if(!started||paused||player.ammo<=0)return;let now=performance.now();if(now-lastShot<300)return;lastShot=now;player.ammo--;let target=enemies.filter(e=>e.hp>0).sort((a,b)=>Math.hypot(a.x-player.x,a.y-player.y)-Math.hypot(b.x-player.x,b.y-player.y))[0];if(target&&Math.hypot(target.x-player.x,target.y-player.y)<330){target.hp--;target.hit=0.2;if(target.hp<=0)showToast('تم إسقاط عدو!')}else showToast('أطلقت النار — لا يوجد عدو قريب');updateHud()}
 
+function netStatus(t){$('netStatus').textContent=t}
+function openNetwork(){ $('menu').classList.add('hidden');$('levelSelect').classList.add('hidden');$('networkSetup').classList.remove('hidden');$('start').classList.add('hidden'); }
+function connectRoom(){
+  const url=$('serverAddress').value.trim();
+  nick=($('nickname').value.trim()||'لاعب').slice(0,16);
+  try{net=new WebSocket(url)}catch(e){netStatus('عنوان الاتصال غير صحيح.');return}
+  netStatus('جارٍ الاتصال بالغرفة...');
+  net.onopen=()=>{netId='';net.send(JSON.stringify({type:'join',name:nick,mode:netMode}));netStatus('تم الاتصال! انتظر دخول اللاعبين أو ابدأ المرحلة.');};
+  net.onmessage=e=>{let m;try{m=JSON.parse(e.data)}catch(_){return}
+    if(m.type==='welcome'){netId=m.id;netPlayers=m.players||{};}
+    if(m.type==='players'){netPlayers=m.players||{};}
+    if(m.type==='state'&&m.player){netPlayers[m.player.id]=m.player;}
+    if(m.type==='left'){delete netPlayers[m.id];}
+    if(m.type==='notice')netStatus(m.text);
+  };
+  net.onerror=()=>netStatus('تعذر الاتصال. تأكد أنكما على نفس Hotspot وأن المضيف شغّل السيرفر.');
+  net.onclose=()=>{netStatus('انقطع الاتصال بالغرفة.');net=null;netId=null;netPlayers={};};
+}
+function sendNetState(t){
+ if(!net||net.readyState!==1||!started||t-netSendAt<65)return;
+ netSendAt=t;
+ net.send(JSON.stringify({type:'move',x:player.x,y:player.y,name:nick,hp:player.hp,mode:netMode}));
+}
+function update(dt){if(!started||paused||won)return;let dx=joy.x,dy=joy.y;if(keys.ArrowLeft||keys.a)dx--;if(keys.ArrowRight||keys.d)dx++;if(keys.ArrowUp||keys.w)dy--;if(keys.ArrowDown||keys.s)dy++;let l=Math.hypot(dx,dy);if(l>1){dx/=l;dy/=l}let nx=Math.max(20,Math.min(1480,player.x+dx*player.speed*dt)),ny=Math.max(20,Math.min(1080,player.y+dy*player.speed*dt));if(!blocked(nx,player.y))player.x=nx;if(!blocked(player.x,ny))player.y=ny;
+for(let e of enemies){if(e.hp<=0)continue;let x=player.x-e.x,y=player.y-e.y,d=Math.hypot(x,y);if(d<260&&d>25){let ex=e.x+x/d*45*dt,ey=e.y+y/d*45*dt;if(!blocked(ex,ey)){e.x=ex;e.y=ey}}if(d<34)player.hp-=17*dt}
+for(let s of supplies)if(!s.got&&Math.hypot(player.x-s.x,player.y-s.y)<38){s.got=true;medkits++;showToast('جمعت حقيبة مؤن!');updateHud()}
+bullets=bullets.filter(b=>b.life>0);for(let b of bullets){b.x+=b.vx*dt;b.y+=b.vy*dt;b.life-=dt;for(let e of enemies)if(e.hp>0&&Math.hypot(e.x-b.x,e.y-b.y)<24){e.hp--;b.life=0}}
+if(player.hp<=0){player.hp=0;started=false;showOverlay('انتهت المحاولة','سقط علوي في المدينة. اضغط إعادة المحاولة وغيّر أسلوبك.');}
+if(medkits>=3&&Math.hypot(player.x-1300,player.y-990)<60){won=true;started=false;let arr=progress.completed[worldIndex];if(!arr.includes(levelIndex))arr.push(levelIndex);progress.unlocked[worldIndex]=Math.max(progress.unlocked[worldIndex],Math.min(4,levelIndex+1));if(levelIndex===4&&worldIndex===0)progress.unlocked[1]=Math.max(progress.unlocked[1],0);save();showOverlay('اكتملت المهمة!','أحسنت يا علوي! أنهيت '+worlds[worldIndex].levels[levelIndex]+'. تقدمك محفوظ على هذا الجهاز.');}
+sendNetState(performance.now());camera.x=Math.max(0,Math.min(1500-W/1.04,player.x-W/2));camera.y=Math.max(0,Math.min(1100-H/1.04,player.y-H/2));updateHud()}
+function showOverlay(title,desc){$('overlay').style.display='flex';$('subtitle').textContent=title;$('story').textContent=desc;$('menu').classList.remove('hidden');$('levelSelect').classList.add('hidden');$('start').classList.remove('hidden');$('start').textContent='العودة للقائمة';$('start').onclick=()=>{started=false;$('overlay').style.display='flex';$('subtitle').textContent='ساعة الصفر · بطولة علوي';$('story').textContent='اختر العالم والمستوى، وابدأ رحلة علوي.';$('start').onclick=()=>begin();}}
+function loop(t){let dt=Math.min((t-last)/1000||0,.04);last=t;update(dt);draw();requestAnimationFrame(loop)}requestAnimationFrame(loop);
+$('multiplayer').onclick=openNetwork;$('city').onclick=()=>selectWorld(0);$('island').onclick=()=>selectWorld(1);
+$('coop').onclick=()=>{netMode='coop';netStatus('وضع التعاون: اعملوا كفريق ضد الأعداء.')};
+$('versus').onclick=()=>{netMode='versus';netStatus('وضع المواجهة: كل لاعب ضد الآخر (نموذج شبكة أولي).')};
+$('hostInfo').onclick=()=>netStatus('شغّل server.js على جهاز المضيف، ثم شارك عنوان IP المحلي الظاهر في نافذة التشغيل مع أصدقائك.');
+$('joinRoom').onclick=connectRoom;
+$('offlineStart').onclick=()=>{nick=($('nickname').value.trim()||'علوي').slice(0,16);$('networkSetup').classList.add('hidden');$('menu').classList.remove('hidden');$('start').classList.remove('hidden');begin();};
+$('continue').onclick=()=>{let wi=progress.unlocked[1]>0?1:0;selectWorld(wi)};$('start').onclick=()=>begin();
+$('pause').onclick=()=>{paused=!paused;showToast(paused?'اللعبة متوقفة مؤقتاً':'عدنا للعب')};
+$('inventory').onclick=()=>$('story').textContent='الحقيبة: مؤن '+medkits+' · ذخيرة '+player.ammo+' · الصحة '+Math.ceil(player.hp)+'%. الأسلحة: مسدس الخدمة.' ,$('overlay').style.display='flex';
+$('bagMenu').onclick=()=>{$('story').textContent='الحقيبة: ذخيرة، مؤن، ومستلزمات البقاء. تُجمع الموارد أثناء اللعب.'};
+$('interact').onclick=()=>{if(medkits<3)showToast('ابحث عن حقائب المؤن الثلاث');else showToast('اتجه إلى علامة الإخلاء الخضراء')};
+$('fire').addEventListener('pointerdown',e=>{e.preventDefault();fire()});
+addEventListener('keydown',e=>{keys[e.key]=true;if(e.key===' '){e.preventDefault();fire()}});addEventListener('keyup',e=>keys[e.key]=false);
+const stick=$('stick'),nub=$('nub');let pid=null;function stickMove(e){let r=stick.getBoundingClientRect(),x=e.clientX-r.left-r.width/2,y=e.clientY-r.top-r.height/2,m=Math.hypot(x,y),max=38;if(m>max){x=x/m*max;y=y/m*max}joy.x=x/max;joy.y=y/max;nub.style.left=(r.width/2-21+x)+'px';nub.style.top=(r.height/2-21+y)+'px'}
+stick.addEventListener('pointerdown',e=>{pid=e.pointerId;stick.setPointerCapture(pid);stickMove(e)});stick.addEventListener('pointermove',e=>{if(e.pointerId===pid)stickMove(e)});function release(){pid=null;joy.x=joy.y=0;nub.style.left=(stick.clientWidth/2-21)+'px';nub.style.top=(stick.clientHeight/2-21)+'px'}stick.addEventListener('pointerup',release);stick.addEventListener('pointercancel',release);
+updateHud();
+})();
+</script></body></html>
